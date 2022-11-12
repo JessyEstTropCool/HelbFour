@@ -8,7 +8,7 @@
             "name": "Python : fichier actif",
             "type": "python",
             "request": "launch",
-            "program": "c:\\Users\\Jessy\\Desktop\\Python\\HelbFour\\Analysis.py",
+            "program": "c:\\Users\\Jessy\\Desktop\\Python\\HelbFour\\HelbFour.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
