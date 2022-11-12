@@ -2,6 +2,7 @@ import difflib
 import threading
 import time
 import re
+from itertools import combinations
 
 def compare_keys(frequencies: dict, subject: str):
     sums = {}
@@ -14,6 +15,7 @@ def compare_keys(frequencies: dict, subject: str):
 
     print("Best " + subject + " : " + max_freq + " - " + str(sums[max_freq]))
     print("Worst " + subject + " : " + min_freq + " - " + str(sums[min_freq]))
+    print("-" * 100)
 
 def show_max_min(frequencies: dict):
     max_freq = max(frequencies, key=frequencies.get)
@@ -30,7 +32,7 @@ def get_products():
     l = []
 
     for i in range(100):
-        l.append("p_" + str(i + 1))
+        l.append("p_" + str(i))
 
     return l
 
@@ -38,11 +40,11 @@ def waiting_anim(total: int):
     animation = "◤◥◢◣"
     idx = 0
     while count != total:
-        print(f"\r{animation[idx % len(animation)]} | lines done : {count} / {total}", end="")
+        print(f"\r{animation[idx % len(animation)]} | lines done : {count} / {total} ", end="")
         idx += 1
         time.sleep(0.1)
 
-    print(f"\r{animation[idx % len(animation)]} | lines done : {count} / {total}")
+    print(f"\r{animation[idx % len(animation)]} | lines done : {count} / {total} ")
 
 def isevaluable(s):
     try:
@@ -67,6 +69,30 @@ def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
 
             for i in range(len(other_dicts)):
                 add_to_dict(other_dicts[i][keys[i]], item)
+
+    new_sub = []
+    for item in sub:
+        if item in products:
+            new_sub.append(item)
+
+    new_sub.sort()
+    for i in combinations(new_sub, 2):
+        pair_freq[str(i)] = pair_freq.setdefault(str(i), 0) + 1
+
+    # for i in range(len(sub)):
+    #     if sub[i] in products:
+
+    #         for j in range(i + 1, len(sub)):
+    #             if sub[j] in products:
+
+    #                 key = str(sorted([sub[i], sub[j]]))
+    #                 pair_freq[key] = pair_freq.setdefault(key, 0) + 1
+
+    #                 for k in range(j + 1, len(sub)):
+    #                     if sub[k] in products:
+
+    #                         key = str(sorted([sub[i], sub[j], sub[k]]))
+    #                         trio_freq[key] = trio_freq.setdefault(key, 0) + 1
         #else:
             #main_dict[item] = 1
             # if item not in products:
@@ -100,6 +126,8 @@ transact = open(filename, "r").readlines()
 if lines_to_read is None or lines_to_read > len(transact):
     lines_to_read = len(transact)
 
+#layer_number = 2
+
 year_prefix = "YEAR:"
 week_prefix = "WEEK:"
 day_prefix = "DAY:"
@@ -113,6 +141,8 @@ year = None
 count = 0
 prev_purchase = []
 product_freq = {}
+pair_freq = {}
+trio_freq = {}
 day_freq = {}
 week_freq = {}
 year_freq = {}
@@ -211,15 +241,30 @@ time.sleep(0.1)
 
 #print(str(infline))
 
-new_dict = {}
+new_prod_dict = {}
 keys = product_freq.keys()
 for key in keys:
     if product_freq[key] > 1:
-        new_dict[key] = product_freq[key]
+        new_prod_dict[key] = product_freq[key]
+
+new_pair_dict = {}
+keys = pair_freq.keys()
+for key in keys:
+    if pair_freq[key] > 1:
+        new_pair_dict[key] = pair_freq[key]
+
+new_trio_dict = {}
+keys = trio_freq.keys()
+for key in keys:
+    if trio_freq[key] > 1:
+        new_trio_dict[key] = trio_freq[key]
 
 print("Done !")
 print(product_freq)
-show_max_min(new_dict)
+show_max_min(new_prod_dict)
 compare_keys(day_freq, "day")
 compare_keys(week_freq, "week")
 compare_keys(year_freq, "year")
+show_max_min(new_pair_dict)
+print(new_pair_dict[str(('p_0', 'p_3'))])
+#show_max_min(new_trio_dict)
