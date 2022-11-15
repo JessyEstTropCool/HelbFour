@@ -76,17 +76,14 @@ def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
             new_sub.append(item)
 
     new_sub.sort()
-    for i in combinations(new_sub, 2):
-        pair_freq[str(i)] = pair_freq.setdefault(str(i), 0) + 1
+    # for i in combinations(new_sub, 2):
+    #     pair_freq[str(i)] = pair_freq.setdefault(str(i), 0) + 1
 
-    # for i in range(len(sub)):
-    #     if sub[i] in products:
-
-    #         for j in range(i + 1, len(sub)):
-    #             if sub[j] in products:
-
-    #                 key = str(sorted([sub[i], sub[j]]))
-    #                 pair_freq[key] = pair_freq.setdefault(key, 0) + 1
+    for i in range(len(new_sub)):
+        compute_layer(new_sub, [new_sub[i]], i, 2)
+        # for j in range(i + 1, len(new_sub)):
+        #         key = str(sorted([new_sub[i], new_sub[j]]))
+        #         layers_freq[key] = layers_freq.setdefault(key, 0) + 1
 
     #                 for k in range(j + 1, len(sub)):
     #                     if sub[k] in products:
@@ -109,6 +106,17 @@ def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
             #         for i in range(len(other_dicts)):
             #             add_to_dict(other_dicts[i][keys[i]], item)
 
+def compute_layer(sub: list, key: list, index: int, layer: int):
+    if layer <= layer_number:
+        for j in range(index + 1, len(sub)):
+            new_key = key.copy()
+            new_key.append(sub[j])
+            new_key = str(sorted(new_key))
+
+            layers_freq[layer][key] = layers_freq[layer].setdefault(key, 0) + 1
+
+            compute_layer(sub, new_key, j, layer + 1)
+
 def add_to_dict(d:dict, item):
     if item in d:
         d[item] += 1
@@ -117,7 +125,7 @@ def add_to_dict(d:dict, item):
 
 filename = "HELBFour_2223_project_dataset.txt"
 # filename = "test.txt"
-lines_to_read = None
+lines_to_read = 10000
 
 print("Reading file...")
 
@@ -126,7 +134,7 @@ transact = open(filename, "r").readlines()
 if lines_to_read is None or lines_to_read > len(transact):
     lines_to_read = len(transact)
 
-#layer_number = 2
+layer_number = 3
 
 year_prefix = "YEAR:"
 week_prefix = "WEEK:"
@@ -141,14 +149,16 @@ year = None
 count = 0
 prev_purchase = []
 product_freq = {}
-pair_freq = {}
-trio_freq = {}
+layers_freq = {}
 day_freq = {}
 week_freq = {}
 year_freq = {}
 #infline = {}
 
-threading.Thread(target=waiting_anim, name="AnimThread", kwargs={"total": lines_to_read}).start()
+#threading.Thread(target=waiting_anim, name="AnimThread", kwargs={"total": lines_to_read}).start()
+
+for i in range(2, layer_number, 1):
+    layers_freq[i] = {}
 
 for i in range(lines_to_read):
     line = transact[i].strip()
@@ -247,17 +257,11 @@ for key in keys:
     if product_freq[key] > 1:
         new_prod_dict[key] = product_freq[key]
 
-new_pair_dict = {}
-keys = pair_freq.keys()
-for key in keys:
-    if pair_freq[key] > 1:
-        new_pair_dict[key] = pair_freq[key]
-
-new_trio_dict = {}
-keys = trio_freq.keys()
-for key in keys:
-    if trio_freq[key] > 1:
-        new_trio_dict[key] = trio_freq[key]
+# new_pair_dict = {}
+# keys = layers_freq.keys()
+# for key in keys:
+#     if layers_freq[key] > 1:
+#         new_pair_dict[key] = layers_freq[key]
 
 print("Done !")
 print(product_freq)
@@ -265,6 +269,8 @@ show_max_min(new_prod_dict)
 compare_keys(day_freq, "day")
 compare_keys(week_freq, "week")
 compare_keys(year_freq, "year")
-show_max_min(new_pair_dict)
-print(new_pair_dict[str(('p_0', 'p_3'))])
+
+for layer in layers_freq:
+    show_max_min(layer)
+# print(new_pair_dict[str(('p_0', 'p_3'))])
 #show_max_min(new_trio_dict)
