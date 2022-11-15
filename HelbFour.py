@@ -1,50 +1,11 @@
 import difflib
-import threading
-import time
 import re
-from itertools import combinations
+import time
+import Animation
+from Analysis import show_max_min, compare_keys, compare_all_keys
+#from itertools import combinations
 
-def compare_keys(frequencies: dict, subject: str):
-    sums = {}
-
-    for key, sub_freq in frequencies.items():
-        sums[key] = sum(sub_freq.values())
-
-    max_freq = max(sums, key=sums.get)
-    min_freq = min(sums, key=sums.get)
-
-    print("Best " + subject + " : " + max_freq + " - " + str(sums[max_freq]))
-    print("Worst " + subject + " : " + min_freq + " - " + str(sums[min_freq]))
-    print("-" * 100)
-
-def show_max_min(frequencies: dict):
-    max_freq = max(frequencies, key=frequencies.get)
-    min_freq = min(frequencies, key=frequencies.get)
-    total = sum(frequencies.values())
-
-    print("Maximum : " + max_freq + " - " + str(frequencies[max_freq]))
-    print("Minimum : " + min_freq + " - " + str(frequencies[min_freq]))
-    print("Total : " + str(total))
-    print("Values : " + str(frequencies))
-    print("-" * 100)
-    
-def get_products():
-    l = []
-
-    for i in range(100):
-        l.append("p_" + str(i))
-
-    return l
-
-def waiting_anim(total: int):
-    animation = "◤◥◢◣"
-    idx = 0
-    while count != total:
-        print(f"\r{animation[idx % len(animation)]} | lines done : {count} / {total} ", end="")
-        idx += 1
-        time.sleep(0.1)
-
-    print(f"\r{animation[idx % len(animation)]} | lines done : {count} / {total} ")
+print("Starting...")
 
 def isevaluable(s):
     try:
@@ -69,6 +30,9 @@ def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
 
             for i in range(len(other_dicts)):
                 add_to_dict(other_dicts[i][keys[i]], item)
+        # else:
+        #     print("odd product -> " + item)
+        #     odds[0] += 1
 
     new_sub = []
     for item in sub:
@@ -76,20 +40,9 @@ def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
             new_sub.append(item)
 
     new_sub.sort()
-    # for i in combinations(new_sub, 2):
-    #     pair_freq[str(i)] = pair_freq.setdefault(str(i), 0) + 1
 
     for i in range(len(new_sub)):
         compute_layer(new_sub, [new_sub[i]], i, 2)
-        # for j in range(i + 1, len(new_sub)):
-        #         key = str(sorted([new_sub[i], new_sub[j]]))
-        #         layers_freq[key] = layers_freq.setdefault(key, 0) + 1
-
-    #                 for k in range(j + 1, len(sub)):
-    #                     if sub[k] in products:
-
-    #                         key = str(sorted([sub[i], sub[j], sub[k]]))
-    #                         trio_freq[key] = trio_freq.setdefault(key, 0) + 1
         #else:
             #main_dict[item] = 1
             # if item not in products:
@@ -111,9 +64,10 @@ def compute_layer(sub: list, key: list, index: int, layer: int):
         for j in range(index + 1, len(sub)):
             new_key = key.copy()
             new_key.append(sub[j])
-            new_key = str(sorted(new_key))
+            new_key = sorted(new_key)
+            str_key = str(new_key)
 
-            layers_freq[layer][key] = layers_freq[layer].setdefault(key, 0) + 1
+            layers_freq[layer][str_key] = layers_freq[layer].setdefault(str_key, 0) + 1
 
             compute_layer(sub, new_key, j, layer + 1)
 
@@ -125,28 +79,29 @@ def add_to_dict(d:dict, item):
 
 filename = "HELBFour_2223_project_dataset.txt"
 # filename = "test.txt"
-lines_to_read = 10000
-
-print("Reading file...")
+lines_to_read = None
+number_of_products = 100
 
 transact = open(filename, "r").readlines()
 
 if lines_to_read is None or lines_to_read > len(transact):
     lines_to_read = len(transact)
 
-layer_number = 3
+layer_number = 2
 
 year_prefix = "YEAR:"
 week_prefix = "WEEK:"
 day_prefix = "DAY:"
 total_prefix = "TOTAL"
 days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-products = get_products()
+products = []
 
 day = None
 week = None
 year = None
-count = 0
+count = [0]
+#odds = [0]
+transactions = []
 prev_purchase = []
 product_freq = {}
 layers_freq = {}
@@ -155,14 +110,22 @@ week_freq = {}
 year_freq = {}
 #infline = {}
 
-#threading.Thread(target=waiting_anim, name="AnimThread", kwargs={"total": lines_to_read}).start()
+#start loading animation
+Animation.start_wait_anim(count, lines_to_read)
 
-for i in range(2, layer_number, 1):
+#intialize layer dicts
+for i in range(2, layer_number + 1, 1):
     layers_freq[i] = {}
+
+#get products
+for i in range(100):
+    products.append("p_" + str(i))
+
+print("Reading file...")
 
 for i in range(lines_to_read):
     line = transact[i].strip()
-    count += 1
+    count[0] += 1
 
     while line != "":
         # articles
@@ -188,6 +151,7 @@ for i in range(lines_to_read):
                             [day_freq, week_freq, year_freq],
                             [day, week, year]
                         )
+                        transactions.append(purchase)
                         #print("ok")
                     #else:
                         #print("double")
@@ -249,8 +213,6 @@ for i in range(lines_to_read):
 
 time.sleep(0.1)
 
-#print(str(infline))
-
 new_prod_dict = {}
 keys = product_freq.keys()
 for key in keys:
@@ -267,10 +229,16 @@ print("Done !")
 print(product_freq)
 show_max_min(new_prod_dict)
 compare_keys(day_freq, "day")
+compare_all_keys(day_freq, "day")
 compare_keys(week_freq, "week")
+compare_all_keys(week_freq, "week")
 compare_keys(year_freq, "year")
+compare_all_keys(year_freq, "year")
 
-for layer in layers_freq:
+for layer in layers_freq.values():
     show_max_min(layer)
 # print(new_pair_dict[str(('p_0', 'p_3'))])
 #show_max_min(new_trio_dict)
+
+# print(str(odds[0]) + " odd products")
+# print("Infinite lines : " + str(infline))
