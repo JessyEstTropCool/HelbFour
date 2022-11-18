@@ -24,6 +24,14 @@ def compare_all_keys(frequencies: dict, subject: str):
 
     print("-" * 100)
 
+def show_all(frequencies: dict, subject: str):
+    frequencies = {k: v for k, v in sorted(frequencies.items(), key=lambda item: item[1])}
+
+    for key, value in frequencies.items():
+        print(key + " - " + str(value))
+
+    print("-" * 100)
+
 def show_max_min(frequencies: dict):
     max_freq = max(frequencies, key=frequencies.get)
     min_freq = min(frequencies, key=frequencies.get)

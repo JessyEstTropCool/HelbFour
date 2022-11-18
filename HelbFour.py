@@ -2,7 +2,7 @@ import difflib
 import re
 import time
 import Animation
-from Analysis import show_max_min, compare_keys, compare_all_keys
+from Analysis import show_max_min, compare_keys, compare_all_keys, show_all
 #from itertools import combinations
 
 print("Starting...")
@@ -87,7 +87,7 @@ transact = open(filename, "r").readlines()
 if lines_to_read is None or lines_to_read > len(transact):
     lines_to_read = len(transact)
 
-layer_number = 2
+layer_number = 6
 
 year_prefix = "YEAR:"
 week_prefix = "WEEK:"
@@ -228,6 +228,7 @@ for key in keys:
 print("Done !")
 print(product_freq)
 show_max_min(new_prod_dict)
+show_all(new_prod_dict, "product")
 compare_keys(day_freq, "day")
 compare_all_keys(day_freq, "day")
 compare_keys(week_freq, "week")
