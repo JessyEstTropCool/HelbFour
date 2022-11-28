@@ -2,7 +2,7 @@ import difflib
 import re
 import time
 import Animation
-from Analysis import show_max_min, compare_keys, compare_all_keys, show_all
+from Analysis import show_max_min, compare_keys, compare_all_keys, show_all, print_list
 #from itertools import combinations
 
 print("Starting...")
@@ -18,11 +18,11 @@ def isevaluable(s):
 def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
     #éviter les doublons : si le toutes les valeurs ont pas des hash diff alors doublons
     if len(sub) != len(set(sub)): 
-        # if sub[0] in infline:
-        #     infline[sub[0]] += len(sub)
-        # else:
-        #     infline[sub[0]] = len(sub)
-        return None
+        if sub[0] in infline:
+            infline[sub[0]] += len(sub)
+        else:
+            infline[sub[0]] = len(sub)
+        sub = set(sub)
 
     for item in sub:
         if item in products:
@@ -30,9 +30,8 @@ def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
 
             for i in range(len(other_dicts)):
                 add_to_dict(other_dicts[i][keys[i]], item)
-        # else:
-        #     print("odd product -> " + item)
-        #     odds[0] += 1
+        else:
+            odds[0] += 1
 
     new_sub = []
     for item in sub:
@@ -78,7 +77,7 @@ def add_to_dict(d:dict, item):
         d[item] = 1
 
 filename = "HELBFour_2223_project_dataset.txt"
-# filename = "test.txt"
+# filename = "errors.txt"
 lines_to_read = None
 number_of_products = 100
 
@@ -87,12 +86,12 @@ transact = open(filename, "r").readlines()
 if lines_to_read is None or lines_to_read > len(transact):
     lines_to_read = len(transact)
 
-layer_number = 6
+layer_number = 2
 
 year_prefix = "YEAR:"
 week_prefix = "WEEK:"
 day_prefix = "DAY:"
-total_prefix = "TOTAL"
+max_prefix_length = 5
 days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 products = []
 
@@ -100,7 +99,11 @@ day = None
 week = None
 year = None
 count = [0]
-#odds = [0]
+skipped_count = [0]
+indexed_skipped = []
+skipped = []
+doubles = [0]
+odds = [0]
 transactions = []
 prev_purchase = []
 product_freq = {}
@@ -108,7 +111,7 @@ layers_freq = {}
 day_freq = {}
 week_freq = {}
 year_freq = {}
-#infline = {}
+infline = {}
 
 #start loading animation
 Animation.start_wait_anim(count, lines_to_read)
@@ -151,17 +154,26 @@ for i in range(lines_to_read):
                             [day_freq, week_freq, year_freq],
                             [day, week, year]
                         )
+                        #indexed_skipped.append(str(count[0]) + " (ok) : " + line + "/-/" + array)
+                        #skipped.append(array)
                         transactions.append(purchase)
                         #print("ok")
-                    #else:
+                    else:
+                        doubles[0] += 1
                         #print("double")
-                #else:
+                else:
+                    indexed_skipped.append(str(count[0]) + " (no_eval) : " + line + "/-/" + array)
+                    skipped.append(array)
+                    skipped_count[0] += 1
                     #print("OW : " + array)
 
                 #print(array)
                 #print(">" + line + "<") 
             else:
                 #print("unfinished array : " + line)
+                indexed_skipped.append(str(count[0]) + " (no_end) : " + line)
+                skipped.append(line)
+                skipped_count[0] += 1
                 line = ""
             
         else:
@@ -199,13 +211,26 @@ for i in range(lines_to_read):
                 
             if "]" in line and "[" not in line:
                 #print("only end to array: " + line)
+                indexed_skipped.append(str(count[0]) + " (no start) : " + line)
+                skipped.append(line)
+                skipped_count[0] += 1
                 line = "[" + line
 
             if line != "" and (not line.startswith(year_prefix) or not line.startswith(week_prefix) or not line.startswith(day_prefix)):
                 #print("weird start : " + line)
-                if "[" in line:
-                    line = line[line.index("[")]
+                corr_start = difflib.get_close_matches(line[0:max_prefix_length:], [day_prefix, week_prefix, year_prefix], n=1, cutoff=0.6)
+                if len(corr_start) > 0:
+                    line = str(corr_start[0]) + line[len(corr_start[0])::]
+                elif "[" in line:
+                    indexed_skipped.append(str(count[0]) + " (to start) : " + line)
+                    skipped.append(line)
+                    skipped_count[0] += 1
+                    line = line[line.index("[")::]
                 else:
+                    # lignes sans tableau, que des pièges c bon
+                    # indexed_skipped.append(str(count[0]) + " (no array) : " + line)
+                    # skipped.append(line)
+                    skipped_count[0] += 1
                     line = ""
                 
             #print(str(year) + " / " + str(week) + " / " + str(day))
@@ -241,5 +266,20 @@ for layer in layers_freq.values():
 # print(new_pair_dict[str(('p_0', 'p_3'))])
 #show_max_min(new_trio_dict)
 
-# print(str(odds[0]) + " odd products")
-# print("Infinite lines : " + str(infline))
+
+print(str(odds[0]) + " odd products")
+
+print("-" * 100)
+print("Infinite lines : " + str(infline))
+
+# print("-" * 100)
+# print_list(skipped)
+# print("-" * 100)
+# print_list(indexed_skipped)
+print("-" * 100)
+print(str(skipped_count[0]) + " lines skipped out of " + str(count[0]))
+print(str(doubles[0]) + " doubles found out of " + str(count[0]))
+print(str((skipped_count[0] / count[0]) * 100) + "% of lines skipped")
+print(str((doubles[0] / count[0]) * 100) + "% of lines are doubles")
+print(str(((skipped_count[0] + doubles[0]) / count[0]) * 100) + "% of lines overall skipped")
+print("-" * 100)

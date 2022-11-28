@@ -42,3 +42,8 @@ def show_max_min(frequencies: dict):
     print("Total : " + str(total))
     #print("Values : " + str(frequencies))
     print("-" * 100)
+
+def print_list(l: list):
+    for i in l:
+        print(i)
+        #print("\"" + i + "\",")
