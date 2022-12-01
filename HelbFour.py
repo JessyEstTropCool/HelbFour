@@ -2,6 +2,7 @@ import difflib
 import re
 import time
 import Animation
+import Excel
 from Analysis import show_max_min, compare_keys, compare_all_keys, show_all, print_list
 #from itertools import combinations
 
@@ -79,7 +80,7 @@ def add_to_dict(d:dict, item):
 filename = "HELBFour_2223_project_dataset.txt"
 # filename = "errors.txt"
 lines_to_read = None
-number_of_products = 100
+number_of_products = 60
 
 transact = open(filename, "r").readlines()
 
@@ -93,6 +94,8 @@ week_prefix = "WEEK:"
 day_prefix = "DAY:"
 max_prefix_length = 5
 days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+weeks = []
+years = []
 products = []
 
 day = None
@@ -121,8 +124,16 @@ for i in range(2, layer_number + 1, 1):
     layers_freq[i] = {}
 
 #get products
-for i in range(100):
+for i in range(number_of_products):
     products.append("p_" + str(i))
+
+#get weeks
+for i in range(1, 52):
+    weeks.append("Semaine " + str(i))
+    
+#get years
+for i in range(2014, 2022):
+    years.append(str(i))
 
 print("Reading file...")
 
@@ -254,12 +265,16 @@ print("Done !")
 print(product_freq)
 show_max_min(new_prod_dict)
 show_all(new_prod_dict, "product")
+Excel.write_single_chart_dict("Total de vente par produits", products, new_prod_dict)
 compare_keys(day_freq, "day")
 compare_all_keys(day_freq, "day")
+Excel.write_chart_dict("Total de produits par jour", days, days, products, day_freq)
 compare_keys(week_freq, "week")
 compare_all_keys(week_freq, "week")
+Excel.write_chart_dict("Total de produits par semaine", weeks, list(range(1, 52)), products, week_freq)
 compare_keys(year_freq, "year")
 compare_all_keys(year_freq, "year")
+Excel.write_chart_dict("Total de produits par année", years, years, products, year_freq)
 
 for layer in layers_freq.values():
     show_max_min(layer)
@@ -283,3 +298,6 @@ print(str((skipped_count[0] / count[0]) * 100) + "% of lines skipped")
 print(str((doubles[0] / count[0]) * 100) + "% of lines are doubles")
 print(str(((skipped_count[0] + doubles[0]) / count[0]) * 100) + "% of lines overall skipped")
 print("-" * 100)
+
+Excel.save_file()
+Excel.close()
