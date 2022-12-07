@@ -78,7 +78,7 @@ def add_to_dict(d:dict, item):
         d[item] = 1
 
 filename = "HELBFour_2223_project_dataset.txt"
-# filename = "errors.txt"
+filename = "errors.txt"
 lines_to_read = None
 number_of_products = 60
 
@@ -185,7 +185,10 @@ for i in range(lines_to_read):
                 indexed_skipped.append(str(count[0]) + " (no_end) : " + line)
                 skipped.append(line)
                 skipped_count[0] += 1
-                line = ""
+                #line = ""
+
+                arrayend = line.index("[", 1)
+                print("- " * 25 + arrayend)
             
         else:
             if year_prefix in line:
@@ -265,16 +268,16 @@ print("Done !")
 print(product_freq)
 show_max_min(new_prod_dict)
 show_all(new_prod_dict, "product")
-Excel.write_single_chart_dict("Total de vente par produits", products, new_prod_dict)
+#Excel.write_single_chart_dict("Total de vente par produits", products, new_prod_dict)
 compare_keys(day_freq, "day")
 compare_all_keys(day_freq, "day")
-Excel.write_chart_dict("Total de produits par jour", days, days, products, day_freq)
+#Excel.write_chart_dict("Total de produits par jour", days, days, products, day_freq)
 compare_keys(week_freq, "week")
 compare_all_keys(week_freq, "week")
-Excel.write_chart_dict("Total de produits par semaine", weeks, list(range(1, 52)), products, week_freq)
+#Excel.write_chart_dict("Total de produits par semaine", weeks, list(range(1, 52)), products, week_freq)
 compare_keys(year_freq, "year")
 compare_all_keys(year_freq, "year")
-Excel.write_chart_dict("Total de produits par année", years, years, products, year_freq)
+#Excel.write_chart_dict("Total de produits par année", years, years, products, year_freq)
 
 for layer in layers_freq.values():
     show_max_min(layer)
@@ -299,5 +302,5 @@ print(str((doubles[0] / count[0]) * 100) + "% of lines are doubles")
 print(str(((skipped_count[0] + doubles[0]) / count[0]) * 100) + "% of lines overall skipped")
 print("-" * 100)
 
-Excel.save_file()
+#Excel.save_file()
 Excel.close()
