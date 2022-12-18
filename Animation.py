@@ -2,7 +2,7 @@ import threading
 import time
 import random
 
-animations = ["◤◥◢◣","-\\|/","◓◑◒◐","◶◵◴◷","◸◹◿◺","◇◈◆◈","←↖↑↗→↘↓↙","⇑⇗⇒⇘⇓⇙⇐⇖","▥▧▤▨","→⇒⇛⇒","⁎⁑⁂⁑","․‥…‥","·⁚⁝⁛⁙","◜◝◞◟"]
+animations = ["◤◥◢◣","-\\|/","◓◑◒◐","◶◵◴◷","◸◹◿◺","◇◈◆◈","←↖↑↗→↘↓↙","⇑⇗⇒⇘⇓⇙⇐⇖","▥▧▤▨","→⇒⇛⇒","⁎⁑⁂⁑","․‥…‥","·⁚⁝⁛⁙","◜◝◞◟","⊗⊕","ↀↂↈↂ"]
 
 def start_wait_anim(count: list, total: int):
     threading.Thread(target=waiting_anim, name="AnimThread", kwargs={"count": count,"total": total}).start()

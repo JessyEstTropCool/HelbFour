@@ -19,10 +19,9 @@ def isevaluable(s):
 def add_product(main_dict: dict, sub: list, other_dicts: list, keys: list):
     #éviter les doublons : si le toutes les valeurs ont pas des hash diff alors doublons
     if len(sub) != len(set(sub)): 
-        if sub[0] in infline:
-            infline[sub[0]] += len(sub)
-        else:
-            infline[sub[0]] = len(sub)
+        infline_count[0] += 1
+        infline_count[1] += len(sub)
+        infline[sub[0]] = infline.setdefault(sub[0], 0) + len(sub)
         sub = set(sub)
 
     for item in sub:
@@ -78,8 +77,8 @@ def add_to_dict(d:dict, item):
         d[item] = 1
 
 filename = "HELBFour_2223_project_dataset.txt"
-filename = "errors.txt"
-lines_to_read = None
+#filename = "errors.txt"
+lines_to_read = 200000
 number_of_products = 60
 
 transact = open(filename, "r").readlines()
@@ -95,6 +94,7 @@ day_prefix = "DAY:"
 max_prefix_length = 5
 days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 weeks = []
+week_keys = []
 years = []
 products = []
 
@@ -102,10 +102,10 @@ day = None
 week = None
 year = None
 count = [0]
-skipped_count = [0]
+skipped_count = [0, 0]
 indexed_skipped = []
 skipped = []
-doubles = [0]
+doubles = [0, 0]
 odds = [0]
 transactions = []
 prev_purchase = []
@@ -115,6 +115,7 @@ day_freq = {}
 week_freq = {}
 year_freq = {}
 infline = {}
+infline_count = [0, 0]
 
 #start loading animation
 Animation.start_wait_anim(count, lines_to_read)
@@ -129,6 +130,7 @@ for i in range(number_of_products):
 
 #get weeks
 for i in range(1, 52):
+    week_keys.append(str(i))
     weeks.append("Semaine " + str(i))
     
 #get years
@@ -165,17 +167,18 @@ for i in range(lines_to_read):
                             [day_freq, week_freq, year_freq],
                             [day, week, year]
                         )
-                        #indexed_skipped.append(str(count[0]) + " (ok) : " + line + "/-/" + array)
-                        #skipped.append(array)
+
                         transactions.append(purchase)
                         #print("ok")
                     else:
                         doubles[0] += 1
+                        doubles[1] += len(purchase)
                         #print("double")
                 else:
                     indexed_skipped.append(str(count[0]) + " (no_eval) : " + line + "/-/" + array)
                     skipped.append(array)
                     skipped_count[0] += 1
+                    skipped_count[1] += array.count(",")
                     #print("OW : " + array)
 
                 #print(array)
@@ -185,10 +188,8 @@ for i in range(lines_to_read):
                 indexed_skipped.append(str(count[0]) + " (no_end) : " + line)
                 skipped.append(line)
                 skipped_count[0] += 1
-                #line = ""
-
-                arrayend = line.index("[", 1)
-                print("- " * 25 + arrayend)
+                skipped_count[1] += array.count(",")
+                line = ""
             
         else:
             if year_prefix in line:
@@ -227,7 +228,7 @@ for i in range(lines_to_read):
                 #print("only end to array: " + line)
                 indexed_skipped.append(str(count[0]) + " (no start) : " + line)
                 skipped.append(line)
-                skipped_count[0] += 1
+                #skipped_count[0] += 1
                 line = "[" + line
 
             if line != "" and (not line.startswith(year_prefix) or not line.startswith(week_prefix) or not line.startswith(day_prefix)):
@@ -238,13 +239,14 @@ for i in range(lines_to_read):
                 elif "[" in line:
                     indexed_skipped.append(str(count[0]) + " (to start) : " + line)
                     skipped.append(line)
-                    skipped_count[0] += 1
+                    #skipped_count[0] += 1
                     line = line[line.index("[")::]
                 else:
                     # lignes sans tableau, que des pièges c bon
                     # indexed_skipped.append(str(count[0]) + " (no array) : " + line)
                     # skipped.append(line)
                     skipped_count[0] += 1
+                    skipped_count[1] += array.count(",")
                     line = ""
                 
             #print(str(year) + " / " + str(week) + " / " + str(day))
@@ -268,16 +270,16 @@ print("Done !")
 print(product_freq)
 show_max_min(new_prod_dict)
 show_all(new_prod_dict, "product")
-#Excel.write_single_chart_dict("Total de vente par produits", products, new_prod_dict)
+Excel.write_single_chart_dict("Total de vente par produits", products, products, new_prod_dict)
 compare_keys(day_freq, "day")
 compare_all_keys(day_freq, "day")
-#Excel.write_chart_dict("Total de produits par jour", days, days, products, day_freq)
+Excel.write_chart_dict("Total de produits par jour", days, products, days, products, day_freq)
 compare_keys(week_freq, "week")
 compare_all_keys(week_freq, "week")
-#Excel.write_chart_dict("Total de produits par semaine", weeks, list(range(1, 52)), products, week_freq)
+Excel.write_chart_dict("Total de produits par semaine", weeks, products, week_keys, products, week_freq)
 compare_keys(year_freq, "year")
 compare_all_keys(year_freq, "year")
-#Excel.write_chart_dict("Total de produits par année", years, years, products, year_freq)
+Excel.write_chart_dict("Total de produits par année", years, products, years, products, year_freq)
 
 for layer in layers_freq.values():
     show_max_min(layer)
@@ -297,10 +299,25 @@ print("Infinite lines : " + str(infline))
 print("-" * 100)
 print(str(skipped_count[0]) + " lines skipped out of " + str(count[0]))
 print(str(doubles[0]) + " doubles found out of " + str(count[0]))
+print(str(infline_count[0]) + " lines with doubles found out of " + str(count[0]))
 print(str((skipped_count[0] / count[0]) * 100) + "% of lines skipped")
 print(str((doubles[0] / count[0]) * 100) + "% of lines are doubles")
+print(str((infline_count[0] / count[0]) * 100) + "% of lines have doubles in them")
 print(str(((skipped_count[0] + doubles[0]) / count[0]) * 100) + "% of lines overall skipped")
 print("-" * 100)
+Excel.write_single_chart_dict(
+    "Taux d'erreurs dans les lignes fichier", 
+    ["Lignes doublées", "Lignes avec des doubles", "Autres erreurs", "Lignes valides"], 
+    ["doub", "inf", "err", "ok"], 
+    {"doub":doubles[0], "inf":infline_count[0], "err":skipped_count[0], "ok":count[0] - doubles[0] - infline_count[0] - skipped_count[0]}
+    )
+    
+Excel.write_single_chart_dict(
+    "Taux de produits erronés dans le fichier", 
+    ["Produits de lignes doublées", "Produits de lignes avec des doubles", "Produits dans des lignes erronées (estimation)", "Produits invalides", "Produits valides"], 
+    ["doub", "inf", "err", "odd", "ok"], 
+    {"doub":doubles[1], "inf":infline_count[1], "err":skipped_count[1], "odd":odds[0], "ok":sum(new_prod_dict.values())}
+    )
 
-#Excel.save_file()
+Excel.save_file()
 Excel.close()
