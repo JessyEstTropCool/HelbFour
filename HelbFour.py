@@ -3,7 +3,7 @@ import re
 import time
 import Animation
 import Excel
-from Analysis import show_max_min, compare_keys, compare_all_keys, show_all, print_list
+from Analysis import show_max_min, compare_keys, compare_all_keys, show_all, print_list, show_top
 #from itertools import combinations
 
 print("Starting...")
@@ -86,8 +86,9 @@ transact = open(filename, "r").readlines()
 if lines_to_read is None or lines_to_read > len(transact):
     lines_to_read = len(transact)
 
-layer_number = 2
+layer_number = 3
 
+# keys & str lists
 year_prefix = "YEAR:"
 week_prefix = "WEEK:"
 day_prefix = "DAY:"
@@ -98,15 +99,19 @@ week_keys = []
 years = []
 products = []
 
+# counters
 day = None
 week = None
 year = None
 count = [0]
 skipped_count = [0, 0]
-indexed_skipped = []
-skipped = []
 doubles = [0, 0]
 odds = [0]
+infline_count = [0, 0]
+
+# dicts & lists
+skipped = []
+indexed_skipped = []
 transactions = []
 prev_purchase = []
 product_freq = {}
@@ -114,8 +119,10 @@ layers_freq = {}
 day_freq = {}
 week_freq = {}
 year_freq = {}
+day_sums = {}
+week_sums = {}
+year_sums = {}
 infline = {}
-infline_count = [0, 0]
 
 #start loading animation
 Animation.start_wait_anim(count, lines_to_read)
@@ -266,23 +273,35 @@ for key in keys:
 #     if layers_freq[key] > 1:
 #         new_pair_dict[key] = layers_freq[key]
 
+for day in days:
+    day_sums[day] = sum(day_freq[day].values())
+
+for week in week_keys:
+    week_sums[week] = sum(week_freq[week].values())
+
+for year in years:
+    if year in year_freq:
+        year_sums[year] = sum(year_freq[year].values())
+    else:
+        year_sums[year] = 0
+
 print("Done !")
 print(product_freq)
 show_max_min(new_prod_dict)
 show_all(new_prod_dict, "product")
-Excel.write_single_chart_dict("Total de vente par produits", products, products, new_prod_dict)
 compare_keys(day_freq, "day")
 compare_all_keys(day_freq, "day")
-Excel.write_chart_dict("Total de produits par jour", days, products, days, products, day_freq)
 compare_keys(week_freq, "week")
 compare_all_keys(week_freq, "week")
-Excel.write_chart_dict("Total de produits par semaine", weeks, products, week_keys, products, week_freq)
 compare_keys(year_freq, "year")
 compare_all_keys(year_freq, "year")
-Excel.write_chart_dict("Total de produits par année", years, products, years, products, year_freq)
+show_max_min(day_sums)
+show_max_min(week_sums)
+show_max_min(year_sums)
 
-for layer in layers_freq.values():
+for key, layer in layers_freq.items():
     show_max_min(layer)
+    show_top(10, layer, f"layer {key}")
 # print(new_pair_dict[str(('p_0', 'p_3'))])
 #show_max_min(new_trio_dict)
 
@@ -305,6 +324,13 @@ print(str((doubles[0] / count[0]) * 100) + "% of lines are doubles")
 print(str((infline_count[0] / count[0]) * 100) + "% of lines have doubles in them")
 print(str(((skipped_count[0] + doubles[0]) / count[0]) * 100) + "% of lines overall skipped")
 print("-" * 100)
+
+#Write charts to Excel
+Excel.write_single_chart_dict("Total de vente par produits", products, products, new_prod_dict)
+Excel.write_chart_dict("Total de produits par jour", days, products, days, products, day_freq)
+Excel.write_chart_dict("Total de produits par semaine", weeks, products, week_keys, products, week_freq)
+Excel.write_chart_dict("Total de produits par année", years, products, years, products, year_freq)
+
 Excel.write_single_chart_dict(
     "Taux d'erreurs dans les lignes fichier", 
     ["Lignes doublées", "Lignes avec des doubles", "Autres erreurs", "Lignes valides"], 
@@ -318,6 +344,10 @@ Excel.write_single_chart_dict(
     ["doub", "inf", "err", "odd", "ok"], 
     {"doub":doubles[1], "inf":infline_count[1], "err":skipped_count[1], "odd":odds[0], "ok":sum(new_prod_dict.values())}
     )
+
+Excel.write_single_chart_dict("Produits vendus par jour", days, days, day_sums)
+Excel.write_single_chart_dict("Produits vendus par semaine", weeks, week_keys, week_sums)
+Excel.write_single_chart_dict("Produits vendus par an", years, years, year_sums)
 
 Excel.save_file()
 Excel.close()
