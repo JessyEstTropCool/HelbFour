@@ -56,3 +56,16 @@ def print_list(l: list):
     for i in l:
         print(i)
         #print("\"" + i + "\",")
+
+def write_errors(errors: list, indexed_errors: list):
+    err_file = open("errors.txt", "w")
+    index_err_file = open("indexed_errors.txt", "w")
+
+    for err in errors:
+        err_file.write(err + "\n")
+
+    for err in indexed_errors:
+        index_err_file.write(err + "\n")
+
+    err_file.close()
+    index_err_file.close()
